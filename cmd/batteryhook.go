@@ -3,6 +3,7 @@ package main
 import (
     "flag"
     "fmt"
+    "log"
     "os"
     "os/signal"
     "syscall"
@@ -36,6 +37,14 @@ func main() {
 
     events := make(chan *battery.Event, 1)
     batteries := battery.GetAll()
+
+    if len(batteries) == 0 {
+        if util.Verbose {
+            log.Println("No batteries detected")
+        }
+        os.Exit(1)
+    }
+
     for _, battery := range batteries {
         go battery.Watch(events, time.Duration(interval))
     }
