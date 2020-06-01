@@ -34,7 +34,7 @@ func (h *Hook) ProcessEvent(event *Event) {
     status, err := event.battery.Status()
     if err == nil && h.level == event.level && (h.status == Both || h.status == status) {
         if util.Verbose {
-            log.Println("Trigger battery event", event.String())
+            log.Println("Trigger battery event", event)
         }
 
         cmd := exec.Command("/bin/sh", "-c", h.cmd)
@@ -54,7 +54,7 @@ func ParseHooks(args []string) ([]*Hook, error) {
         }
 
         if util.Verbose {
-            log.Println("Parsed hook", h.String())
+            log.Println("Parsed hook", h)
         }
         hooks = append(hooks, h)
     }
