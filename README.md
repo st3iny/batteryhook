@@ -4,7 +4,9 @@ Written in go.
 
 ## Usage
 ```
-Usage: batteryhook [-h|--help] [-v] [-i INTERVAL] HOOK [HOOK ...]
+Usage: batteryhook [-h|--help] [-v] [-i INTERVAL] [-b BATTTERY] HOOK [HOOK ...]
+  -b string
+        Select battery to watch (default "BAT0")
   -i uint
         Battery refresh interval in ms (default 5000)
   -v    Increase verbosity
