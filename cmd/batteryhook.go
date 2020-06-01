@@ -41,10 +41,14 @@ func main() {
 
     events := make(chan *battery.Event, 1)
     go bat.Watch(events, time.Duration(interval) * time.Millisecond)
-
-    for _, h := range hooks {
-        go h.ProcessEvents(events)
-    }
+    go func() {
+        for {
+            event := <-events
+            for _, h := range hooks {
+                h.ProcessEvent(event)
+            }
+        }
+    }()
 
     sigc := make(chan os.Signal, 1)
     signal.Notify(sigc, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)

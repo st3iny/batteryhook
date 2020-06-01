@@ -30,20 +30,17 @@ func (h* Hook) String() string {
     return fmt.Sprintf("{status: %s, level: %d, cmd: \"%s\"}", status, h.level, h.cmd)
 }
 
-func (h *Hook) ProcessEvents(events chan *Event) {
-    for {
-        event := <-events
-        status, err := event.battery.Status()
-        if err == nil && h.level == event.level && (h.status == Both || h.status == status) {
-            if util.Verbose {
-                log.Println("Trigger battery event", event.String())
-            }
-
-            cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("'%s'", h.cmd))
-            cmd.Stdout = os.Stdout
-            cmd.Stderr = os.Stderr
-            cmd.Run()
+func (h *Hook) ProcessEvent(event *Event) {
+    status, err := event.battery.Status()
+    if err == nil && h.level == event.level && (h.status == Both || h.status == status) {
+        if util.Verbose {
+            log.Println("Trigger battery event", event.String())
         }
+
+        cmd := exec.Command("/bin/sh", "-c", h.cmd)
+        cmd.Stdout = os.Stdout
+        cmd.Stderr = os.Stderr
+        cmd.Run()
     }
 }
 
