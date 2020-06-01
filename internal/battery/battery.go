@@ -7,7 +7,6 @@ import (
     "os"
     "path"
     "strconv"
-    "strings"
     "time"
 
     "github.com/st3iny/batteryhook/internal/util"
@@ -18,6 +17,8 @@ const (
     Charging int = 2
     Discharging int = 3
 )
+
+const batteryBaseDir string = "/sys/class/power_supply"
 
 type Battery struct {
     name string
@@ -99,30 +100,25 @@ func (bat *Battery) Watch(events chan *Event, interval time.Duration) {
             }
             bat.lastLevel = level
         }
-        time.Sleep(interval * time.Millisecond)
+        time.Sleep(interval)
         level += 3
     }
 }
 
-func GetAll() []*Battery {
-    const batteryDir string = "/sys/class/power_supply"
-    files, err := ioutil.ReadDir(batteryDir)
-    util.Check(err)
-
-    batteries := []*Battery{}
-    for _, file := range files {
-        if strings.HasPrefix(file.Name(), "BAT") {
-            if util.Verbose {
-                log.Println("Found battery", file.Name())
-            }
-
-            bat := &Battery{
-                name: file.Name(),
-                lastLevel: -1,
-                path: path.Join(batteryDir, file.Name()),
-            }
-            batteries = append(batteries, bat)
-        }
+func Get(name string) (*Battery, error) {
+    batteryDir := path.Join(batteryBaseDir, name)
+    if s, err := os.Stat(batteryDir); os.IsNotExist(err) || !s.IsDir() {
+        return nil, fmt.Errorf("No such battery %s", name)
     }
-    return batteries
+
+    if util.Verbose {
+        log.Println("Found battery", name, "at", batteryDir)
+    }
+
+    bat := &Battery{
+        name: name,
+        lastLevel: -1,
+        path: batteryDir,
+    }
+    return bat, nil
 }
