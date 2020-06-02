@@ -25,3 +25,14 @@ Run `make install` to build and install batteryhook to `/usr/local/bin`.
 
 A custom target directory can be set via the `PREFIX` environment variable.
 Run `PREFIX=~/.local make install` to install batteryhook to `~/.local/bin`.
+
+## Examples
+Notify about low battery and hibernate on very low battery (requires [libnotify](https://gitlab.gnome.org/GNOME/libnotify)):
+```sh
+batteryhook 'd,25,notify-send "Battery is running low"' 'd,10,systemctl hibernate'
+```
+
+Run multiple commands per hook using POSIX shell syntax (requires [libnotify](https://gitlab.gnome.org/GNOME/libnotify) and [brightnessctl](https://github.com/Hummer12007/brightnessctl)):
+```sh
+batteryhook 'd,20,notify-send "Low battery" && brightnessctl s 10%'
+```
