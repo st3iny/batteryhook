@@ -64,12 +64,12 @@ func ParseHooks(args []string) ([]*Hook, error) {
 
 func parseHook(raw string) (*Hook, error) {
     parts := strings.Split(raw, ",")
-    if len(parts) != 3 {
-        return nil, fmt.Errorf("Too many or too few parts in hook %s", raw)
+    if len(parts) < 3 {
+        return nil, fmt.Errorf("Too few parts in hook %s", raw)
     }
     statusStr := parts[0]
     levelStr := parts[1]
-    command := parts[2]
+    command := strings.Join(parts[2:], ",")
 
     var status int
     switch (statusStr) {
