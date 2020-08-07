@@ -1,6 +1,4 @@
-PREFIX ?= /usr/local
-
-.PHONY: build clean install
+PREFIX = /usr/local
 
 all: build
 
@@ -11,4 +9,6 @@ clean:
 	rm batteryhook
 
 install: build
-	cp batteryhook ${PREFIX}/bin
+	install -Dm0755 batteryhook ${PREFIX}/bin/batteryhook
+
+.PHONY: build clean install
