@@ -2,101 +2,82 @@ package battery
 
 import (
     "fmt"
+    "io/ioutil"
     "log"
     "os"
     "os/exec"
-    "strconv"
-    "strings"
 
     "github.com/st3iny/batteryhook/internal/util"
+
+    "gopkg.in/yaml.v2"
 )
 
 type Hook struct {
-    status int
-    level int
-    cmd string
+    Charging bool `yaml:"charging"`
+    Discharging bool `yaml:"discharging"`
+    Level int `yaml:"level"`
+    Command string `yaml:"command"`
 }
 
-func (h* Hook) String() string {
-    var status string
-    switch h.status {
-    case Both:
-        status = "Both"
-    case Charging:
-        status = "Charging"
-    case Discharging:
-        status = "Discharging"
+func LoadHooks() ([]Hook, error) {
+    hookPath, err := util.BuildConfigPath("hooks.yaml")
+    if err != nil {
+        return nil, err
     }
-    return fmt.Sprintf("{status: %s, level: %d, cmd: \"%s\"}", status, h.level, h.cmd)
-}
 
-func (h *Hook) ProcessEvent(event *Event) {
-    status, err := event.battery.Status()
-    if err == nil && h.level == event.level && (h.status == Both || h.status == status) {
-        if util.Verbose {
-            log.Println("Trigger battery event", event)
-        }
-
-        cmd := exec.Command("/bin/sh", "-c", h.cmd)
-        cmd.Stdout = os.Stdout
-        cmd.Stderr = os.Stderr
-        cmd.Run()
+    _, err = os.Stat(hookPath)
+    if os.IsNotExist(err) {
+        return nil, nil
+    } else if err != nil {
+        return nil, err
     }
-}
 
-func ParseHooks(args []string) ([]*Hook, error) {
-    hooks := make([]*Hook, 0, len(args))
+    hooksBlob, err := ioutil.ReadFile(hookPath)
+    if err != nil {
+        return nil, err
+    }
 
-    for _, arg := range args {
-        h, err := parseHook(arg)
-        if err != nil {
-            return nil, err
-        }
-
-        if util.Verbose {
-            log.Println("Parsed hook", h)
-        }
-        hooks = append(hooks, h)
+    var hooks []Hook
+    err = yaml.Unmarshal(hooksBlob, &hooks)
+    if err != nil {
+        return nil, err
     }
 
     return hooks, nil
 }
 
-func parseHook(raw string) (*Hook, error) {
-    parts := strings.Split(raw, ",")
-    if len(parts) < 3 {
-        return nil, fmt.Errorf("Too few parts in hook %s", raw)
-    }
-    statusStr := parts[0]
-    levelStr := parts[1]
-    command := strings.Join(parts[2:], ",")
+func (h Hook) String() string {
+    return fmt.Sprintf(
+        "{charging: %t, discharging: %t, level: %d, command: \"%s\"}",
+        h.Charging, h.Discharging, h.Level, h.Command,
+    )
+}
 
-    var status int
-    switch (statusStr) {
-    case "cd":
-        status = Both
-    case "c":
-        status = Charging
-    case "d":
-        status = Discharging
-    default:
-        return nil, fmt.Errorf("Invalid status in hook %s", raw)
-    }
-
-    levelRaw, err := strconv.ParseInt(levelStr, 10, 64)
+func (h *Hook) ProcessEvent(event *Event) error {
+    status, err := event.battery.Status()
     if err != nil {
-        return nil, err
+        return err
     }
 
-    level := int(levelRaw)
-    if level > 100 || level < 0 {
-        return nil, fmt.Errorf("Invalid level in hook %s", raw)
+    trigger := false
+    if status == Charging && h.Charging {
+        trigger = true
+    } else if status == Discharging && h.Discharging {
+        trigger = true
+    } else if status == Both && (h.Charging || h.Discharging) {
+        trigger = true
     }
 
-    h := &Hook{
-        status: status,
-        level: level,
-        cmd: command,
+    if trigger && h.Level == event.level {
+        if util.Verbose {
+            log.Println("Trigger battery event", event)
+        }
+
+        cmd := exec.Command("/bin/sh", "-c", h.Command)
+        cmd.Stdout = os.Stdout
+        cmd.Stderr = os.Stderr
+        cmd.Start()
     }
-    return h, nil
+
+    return nil
 }
