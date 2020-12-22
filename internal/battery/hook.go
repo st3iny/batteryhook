@@ -73,10 +73,12 @@ func (h *Hook) ProcessEvent(event *Event) error {
             log.Println("Trigger battery event", event)
         }
 
-        cmd := exec.Command("/bin/sh", "-c", h.Command)
-        cmd.Stdout = os.Stdout
-        cmd.Stderr = os.Stderr
-        cmd.Start()
+        go func() {
+            cmd := exec.Command("/bin/sh", "-c", h.Command)
+            cmd.Stdout = os.Stdout
+            cmd.Stderr = os.Stderr
+            cmd.Run()
+        }()
     }
 
     return nil
