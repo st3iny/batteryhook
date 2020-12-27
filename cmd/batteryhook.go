@@ -11,6 +11,7 @@ import (
     "time"
 
     "github.com/st3iny/batteryhook/internal/battery"
+    "github.com/st3iny/batteryhook/internal/conf"
     "github.com/st3iny/batteryhook/internal/util"
 )
 
@@ -26,16 +27,16 @@ func main() {
     bat, err := battery.Get(batteryName)
     util.Check(err)
 
-    hooks, err := battery.LoadHooks()
+    conf, err := conf.Load()
     util.Check(err)
 
     if util.Verbose {
-        for _, h := range hooks {
+        for _, h := range conf.Hooks {
             log.Println("Parsed hook", h)
         }
     }
 
-    if len(hooks) == 0 {
+    if len(conf.Hooks) == 0 {
         fmt.Fprintln(os.Stderr, "No hooks found (try --help)")
         os.Exit(1)
     }
@@ -45,7 +46,7 @@ func main() {
     go func() {
         for {
             event := <-events
-            for _, h := range hooks {
+            for _, h := range conf.Hooks {
                 err := h.ProcessEvent(event)
                 if util.Verbose && err != nil {
                     log.Println("Error while handling battery event")

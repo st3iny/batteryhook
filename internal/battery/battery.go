@@ -82,7 +82,7 @@ func (bat *Battery) Watch(events chan *Event, interval time.Duration) {
     for {
         level, err := bat.Level()
         if err == nil && bat.lastLevel == -1 {
-            events <- &Event{battery: bat, level: level}
+            events <- &Event{Battery: bat, Level: level}
         } else if err == nil && level != bat.lastLevel {
             step := 1
             if level < bat.lastLevel {
@@ -91,7 +91,7 @@ func (bat *Battery) Watch(events chan *Event, interval time.Duration) {
 
             start := bat.lastLevel + step
             for i := start;; i += step {
-                events <- &Event{battery: bat, level: i}
+                events <- &Event{Battery: bat, Level: i}
                 if i == level {
                     break
                 }
