@@ -69,16 +69,21 @@ func usage() {
     flag.PrintDefaults()
     help := []string{
         "",
-        "Hooks are defined in the file $XDG_CONFIG_HOME/batteryhook/hooks.yaml.",
-        "This path defaults to ~/.config/batteryhook/hooks.yaml on most machines.",
+        "Hooks are defined in the file $XDG_CONFIG_HOME/batteryhook/config.yaml.",
+        "This path defaults to ~/.config/batteryhook/config.yaml on most machines.",
         "",
-        "Example hooks.yaml:",
-        "- charging: false",
-        "  discharging: true",
-        "  level: 10",
-        "  command: systemctl hibernate",
+        "Example config.yaml:",
+        "hooks:",
+        "  - status:",
+        "      discharging: true",
+        "    level: 10",
+        "    command: systemctl hibernate",
         "",
-        "This will hibernate your machine when it falls below 10% while not being connected to external power.",
+        "This will hibernate your machine when it falls below 10% while discharging.",
+        "",
+        "Valid statuses are: unknown, discharging, charging, not_charging and full",
+        "Status defaults to (if omitted): discharging",
+        "Refer to the linux documentation for more information on battery status (power_supply.h).",
     }
     fmt.Fprintln(os.Stderr, strings.Join(help, "\n"))
 }

@@ -12,10 +12,14 @@ import (
     "github.com/st3iny/batteryhook/internal/util"
 )
 
+type Status int
+
 const (
-    Both int = 1
-    Charging int = 2
-    Discharging int = 3
+    Unknown     Status = 0
+    Discharging Status = 1
+    Charging    Status = 2
+    NotCharging Status = 3
+    Full        Status = 4
 )
 
 const batteryBaseDir string = "/sys/class/power_supply"
@@ -50,7 +54,7 @@ func (bat *Battery) Level() (int, error) {
     return int(level), nil
 }
 
-func (bat *Battery) Status() (int, error) {
+func (bat *Battery) Status() (Status, error) {
     file, err := os.Open(path.Join(bat.path, "status"))
     if err != nil {
         return 0, err
@@ -65,17 +69,7 @@ func (bat *Battery) Status() (int, error) {
         return 0, err
     }
 
-    var status int
-    switch string(statusRaw[:len(statusRaw) - 1]) {
-    case "Charging":
-        status = Charging
-    case "Discharging":
-        status = Discharging
-    default:
-        return 0, fmt.Errorf("unknown battery status")
-    }
-
-    return status, nil
+    return ParseStatus(string(statusRaw[:len(statusRaw) - 1]))
 }
 
 func (bat *Battery) Watch(events chan *Event, interval time.Duration) {
@@ -119,4 +113,24 @@ func Get(name string) (*Battery, error) {
         path: batteryDir,
     }
     return bat, nil
+}
+
+func ParseStatus(rawStatus string) (Status, error) {
+    var status Status
+    switch rawStatus {
+    case "Unknown":
+        status = Unknown
+    case "Discharging":
+        status = Discharging
+    case "Charging":
+        status = Charging
+    case "Not charging":
+        status = NotCharging
+    case "Full":
+        status = Full
+    default:
+        return 0, fmt.Errorf("unknown battery status")
+    }
+
+    return status, nil
 }
