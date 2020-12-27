@@ -37,7 +37,7 @@ Run `make install` to build and install batteryhook to `/usr/local/bin`.
 A custom target directory can be set via the `PREFIX` variable.
 Run `make PREFIX=~/.local install` to install batteryhook to `~/.local/bin`.
 
-## Examples for `hooks.yaml`
+## Examples for `config.yaml`
 Notify about low battery and hibernate on very low battery (requires [libnotify](https://gitlab.gnome.org/GNOME/libnotify)):
 ```yaml
 hooks:
