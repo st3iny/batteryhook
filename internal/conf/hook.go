@@ -44,7 +44,9 @@ func (h *Hook) ProcessEvent(event *battery.Event) error {
     }
 
     trigger := false
-    if status == battery.Unknown && h.Status.Unknown {
+    if status == battery.Any {
+        trigger = true
+    } else if status == battery.Unknown && h.Status.Unknown {
         trigger = true
     } else if status == battery.Discharging && h.Status.Discharging {
         trigger = true
@@ -63,17 +65,15 @@ func (h *Hook) ProcessEvent(event *battery.Event) error {
             log.Println("Trigger battery event", event)
         }
 
-        go func() {
-            cmd := exec.Command("/bin/sh", "-c", h.Command)
-            cmd.Stdout = os.Stdout
-            cmd.Stderr = os.Stderr
+        cmd := exec.Command("/bin/sh", "-c", h.Command)
+        cmd.Stdout = os.Stdout
+        cmd.Stderr = os.Stderr
 
-            if util.Verbose {
-                log.Println("Running", cmd.Args)
-            }
+        if util.Verbose {
+            log.Println("Running", cmd.Args)
+        }
 
-            cmd.Run()
-        }()
+        cmd.Run()
     }
 
     return nil

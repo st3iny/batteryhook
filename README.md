@@ -9,6 +9,8 @@ Usage: batteryhook [-h|--help] [-v] [-i INTERVAL] [-b BATTTERY]
         Select battery to watch (default "BAT0")
   -i uint
         Battery refresh interval in ms (default 5000)
+  -t string
+        Test hooks in level interval (format "BEGIN[-END]")
   -v    Increase verbosity
 
 Hooks are defined in the file $XDG_CONFIG_HOME/batteryhook/config.yaml.
