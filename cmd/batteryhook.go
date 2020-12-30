@@ -70,7 +70,7 @@ func linux(events chan *battery.Event) {
     signal.Notify(sigc, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
     for {
         <-sigc
-        os.Exit(2)
+        os.Exit(0)
     }
 }
 
