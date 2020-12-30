@@ -18,11 +18,6 @@ func Check(err error) {
 
 // build path to given config file using the xdg standard
 func BuildConfigPath(file string) (string, error) {
-    path, err := xdg.ConfigFile(path.Join("batteryhook", file))
-    if err != nil {
-        return "", err
-    }
-
-    return path, nil
+    return xdg.SearchConfigFile(path.Join("batteryhook", file))
 }
 

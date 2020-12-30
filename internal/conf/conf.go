@@ -20,9 +20,7 @@ func Load() (*Config, error) {
     }
 
     _, err = os.Stat(configPath)
-    if os.IsNotExist(err) {
-        return nil, nil
-    } else if err != nil {
+    if err != nil {
         return nil, err
     }
 
