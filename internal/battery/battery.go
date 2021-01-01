@@ -18,6 +18,25 @@ const (
     Any         Status = 5
 )
 
+func (status Status) String() string {
+    statusString := ""
+    switch status {
+    case Unknown:
+        statusString = "Unknown"
+    case Discharging:
+        statusString = "Discharging"
+    case Charging:
+        statusString = "Charging"
+    case NotCharging:
+        statusString = "NotCharging"
+    case Full:
+        statusString = "Full"
+    case Any:
+        statusString = "Any"
+    }
+    return statusString
+}
+
 type Battery interface {
     Poll() (bool, error)
     Level() int
@@ -46,7 +65,7 @@ func Watch(bat Battery, events chan *Event, interval time.Duration) {
 
         level := bat.Level()
         if err == nil && lastLevel == -1 {
-            events <- &Event{Battery: bat, Level: level}
+            events <- &Event{Level: level, Status: bat.Status()}
         } else if err == nil && level != lastLevel {
             step := 1
             if level < lastLevel {
@@ -55,7 +74,7 @@ func Watch(bat Battery, events chan *Event, interval time.Duration) {
 
             start := lastLevel + step
             for i := start;; i += step {
-                events <- &Event{Battery: bat, Level: i}
+                events <- &Event{Level: i, Status: bat.Status()}
                 if i == level {
                     break
                 }

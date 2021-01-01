@@ -28,7 +28,7 @@ func (h Hook) String() string {
     return fmt.Sprintf(
         "{Status: {%s: %t, %s: %t, %s: %t, %s: %t, %s: %t}, %s: %d, %s: \"%s\"}",
         "Unknown", h.Status.Unknown,
-        "Discharging", h.Status.Discharging || h.Status == (HookStatus{}),
+        "Discharging", h.Status.Discharging || h.Status.IsZero(),
         "Charging", h.Status.Charging,
         "NotCharging", h.Status.NotCharging,
         "Full", h.Status.Full,
@@ -37,23 +37,23 @@ func (h Hook) String() string {
     )
 }
 
-func (h *Hook) ProcessEvent(event *battery.Event) error {
-    status := event.Battery.Status()
+func (status HookStatus) IsZero() bool {
+    return status == (HookStatus{})
+}
 
+func (h *Hook) ProcessEvent(event *battery.Event) error {
     trigger := false
-    if status == battery.Any {
+    if event.Status == battery.Any {
         trigger = true
-    } else if status == battery.Unknown && h.Status.Unknown {
+    } else if event.Status == battery.Unknown && h.Status.Unknown {
         trigger = true
-    } else if status == battery.Discharging && h.Status.Discharging {
+    } else if event.Status == battery.Discharging && (h.Status.Discharging || h.Status.IsZero()) {
         trigger = true
-    } else if status == battery.Charging && h.Status.Charging {
+    } else if event.Status == battery.Charging && h.Status.Charging {
         trigger = true
-    } else if status == battery.NotCharging && h.Status.NotCharging {
+    } else if event.Status == battery.NotCharging && h.Status.NotCharging {
         trigger = true
-    } else if status == battery.Full && h.Status.Full {
-        trigger = true
-    } else if h.Status == (HookStatus{}) && h.Status.Discharging {
+    } else if event.Status == battery.Full && h.Status.Full {
         trigger = true
     }
 
