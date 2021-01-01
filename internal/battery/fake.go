@@ -1,21 +1,27 @@
 package battery
 
 type FakeBattery struct {
-    level int
+    next int
+    low int
 }
 
-func (bat *FakeBattery) Level() (int, error) {
-    return bat.level, nil
+func (bat *FakeBattery) Poll() (bool, error) {
+    bat.next--
+    return bat.next >= bat.low, nil
 }
 
-func (bat *FakeBattery) Status() (Status, error) {
-    return Any, nil
+func (bat *FakeBattery) Level() int {
+    return bat.next
+}
+
+func (bat *FakeBattery) Status() Status {
+    return Any
 }
 
 func (bat *FakeBattery) String() string {
     return "FAKE"
 }
 
-func NewFakeBattery(level int) *FakeBattery {
-    return &FakeBattery{level: level}
+func NewFakeBattery(high, low int) *FakeBattery {
+    return &FakeBattery{next: high + 1, low: low}
 }

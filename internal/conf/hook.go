@@ -38,10 +38,7 @@ func (h Hook) String() string {
 }
 
 func (h *Hook) ProcessEvent(event *battery.Event) error {
-    status, err := event.Battery.Status()
-    if err != nil {
-        return err
-    }
+    status := event.Battery.Status()
 
     trigger := false
     if status == battery.Any {
@@ -73,7 +70,10 @@ func (h *Hook) ProcessEvent(event *battery.Event) error {
             log.Println("Running", cmd.Args)
         }
 
-        cmd.Run()
+        err := cmd.Run()
+        if err != nil {
+            return err
+        }
     }
 
     return nil

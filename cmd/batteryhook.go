@@ -43,12 +43,45 @@ func main() {
     }
 
     events := make(chan *battery.Event, 1)
+
+    // Create real or fake testing battery
+    var bat battery.Battery
+    var pollInterval time.Duration
     if testInterval == "" {
-        go linux(events)
+        bat, err = battery.NewLinuxBattery(batteryName)
+        util.Check(err)
+
+        pollInterval = time.Duration(interval) * time.Millisecond
     } else {
-        go fake(events)
+        testInterval := strings.Split(testInterval, "-")
+
+        testBegin, err := strconv.Atoi(testInterval[0])
+        util.Check(err)
+
+        testEnd := testBegin
+        if len(testInterval) > 1 {
+            testEnd, err = strconv.Atoi(testInterval[1])
+            util.Check(err)
+        }
+
+        bat = battery.NewFakeBattery(testBegin, testEnd)
+        pollInterval = 0
     }
 
+    // Watch battery level and status
+    go battery.Watch(bat, events, pollInterval)
+
+    // Terminate on signal
+    go func() {
+        sigc := make(chan os.Signal, 1)
+        signal.Notify(sigc, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+        for {
+            <-sigc
+            os.Exit(0)
+        }
+    }()
+
+    // Listen for events
     for event := range events {
         for _, h := range conf.Hooks {
             err := h.ProcessEvent(event)
@@ -57,40 +90,6 @@ func main() {
                 log.Println(err)
             }
         }
-    }
-}
-
-func linux(events chan *battery.Event) {
-    bat, err := battery.NewLinuxBattery(batteryName)
-    util.Check(err)
-
-    go bat.Watch(events, time.Duration(interval) * time.Millisecond)
-
-    sigc := make(chan os.Signal, 1)
-    signal.Notify(sigc, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
-    for {
-        <-sigc
-        os.Exit(0)
-    }
-}
-
-func fake(events chan *battery.Event) {
-    defer close(events)
-
-    interval := strings.Split(testInterval, "-")
-
-    testBegin, err := strconv.Atoi(interval[0])
-    util.Check(err)
-
-    testEnd := testBegin
-    if len(interval) > 1 {
-        testEnd, err = strconv.Atoi(interval[1])
-        util.Check(err)
-    }
-
-    for level := testEnd; level >= testBegin; level-- {
-        bat := battery.NewFakeBattery(level)
-        events <- &battery.Event{Battery: bat, Level: level}
     }
 }
 
