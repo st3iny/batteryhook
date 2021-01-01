@@ -64,9 +64,9 @@ func Watch(bat Battery, events chan *Event, interval time.Duration) {
         }
 
         level := bat.Level()
-        if err == nil && lastLevel == -1 {
+        if lastLevel == -1 {
             events <- &Event{Level: level, Status: bat.Status()}
-        } else if err == nil && level != lastLevel {
+        } else if level != lastLevel {
             step := 1
             if level < lastLevel {
                 step = -1
